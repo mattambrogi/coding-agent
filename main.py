@@ -2,8 +2,6 @@
 import os
 import anthropic
 from dotenv import load_dotenv
-
-
 from agent import Agent
 from tool import Tool
 from file_tools import (
@@ -18,6 +16,7 @@ from file_tools import (
     CREATE_FILE_SCHEMA,
     GREP_SCHEMA
 )
+from shell_tools import execute_bash, BASH_SCHEMA
 
 def main():
     # Check for API key
@@ -72,6 +71,22 @@ For searching file paths by pattern, use list_files instead.
 Use this when you need to locate specific code, functions, variables, or text within the codebase.""",
             input_schema=GREP_SCHEMA,
             function=grep_tool
+        ),
+        Tool(
+            name="execute_bash",
+            description="""Execute bash commands in a shell session.
+Use this for running system commands and git operations.
+Commands are limited to a set of approved operations for security.
+Examples of useful commands:
+- File operations: ls -la, find . -name "*.py", cat file.txt
+- Git operations: git status, git add ., git commit -m "message", git diff
+- Python: python script.py, pip install package
+- Node.js: npm install, node script.js
+
+Each command requires confirmation before execution.
+""",
+            input_schema=BASH_SCHEMA,
+            function=execute_bash
         )
     ]
     
