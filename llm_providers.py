@@ -104,7 +104,7 @@ class OpenAIProvider(LLMProvider):
         
         # Make the API call
         kwargs = {
-            "model": "gpt-4",
+            "model": "gpt-4o",
             "max_tokens": 1024,
             "messages": openai_messages
         }

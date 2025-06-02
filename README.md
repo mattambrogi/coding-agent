@@ -72,7 +72,7 @@ python main.py --help
 - **Status**: ✅ Fully supported
 
 ### OpenAI GPT
-- **Models**: gpt-4
+- **Models**: gpt-4o
 - **Features**: Full tool calling support with format conversion
 - **Status**: ✅ Fully supported
 
