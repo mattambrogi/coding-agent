@@ -107,13 +107,18 @@ def grep_tool(params: Dict[str, Any]) -> str:
         
         results = []
         
+        # Directories to exclude from search
+        excluded_dirs = {'venv', '.git', '__pycache__', 'node_modules', '.venv', 'env'}
+        
         # Determine which files to search
         if os.path.isfile(path):
             files_to_search = [path]
         else:
             files_to_search = []
             if recursive:
-                for root, _, files in os.walk(path):
+                for root, dirs, files in os.walk(path):
+                    # Remove excluded directories from the search
+                    dirs[:] = [d for d in dirs if d not in excluded_dirs]
                     for file in files:
                         files_to_search.append(os.path.join(root, file))
             else:

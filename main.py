@@ -1,9 +1,11 @@
 # main.py
 import os
-import anthropic
+import sys
+import argparse
 from dotenv import load_dotenv
 from agent import Agent
 from tool import Tool
+from llm_providers import create_provider
 from file_tools import (
     read_file,
     list_files,
@@ -19,18 +21,44 @@ from file_tools import (
 from shell_tools import execute_bash, BASH_SCHEMA
 
 def main():
-    # Check for API key
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Coding Agent with multi-provider LLM support")
+    parser.add_argument("--provider", choices=["anthropic", "openai"], 
+                       help="LLM provider to use (default: from LLM_PROVIDER env var or 'anthropic')")
+    args = parser.parse_args()
+    
+    # Load environment variables
     load_dotenv()
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("Error: ANTHROPIC_API_KEY environment variable not set")
-        print("Please set your Anthropic API key with:")
-        print("export ANTHROPIC_API_KEY='your-key-here'")
+    
+    # Determine provider
+    provider_type = args.provider or os.environ.get("LLM_PROVIDER", "anthropic").lower()
+    
+    # Get appropriate API key
+    if provider_type == "anthropic":
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            print("Error: ANTHROPIC_API_KEY environment variable not set")
+            print("Please set your Anthropic API key with:")
+            print("export ANTHROPIC_API_KEY='your-key-here'")
+            return
+    elif provider_type == "openai":
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            print("Error: OPENAI_API_KEY environment variable not set")
+            print("Please set your OpenAI API key with:")
+            print("export OPENAI_API_KEY='your-key-here'")
+            return
+    else:
+        print(f"Error: Unsupported provider '{provider_type}'. Supported providers: anthropic, openai")
         return
     
-    # Initialize Anthropic client
-    client = anthropic.Anthropic(api_key=api_key)
+    # Initialize LLM provider
+    try:
+        llm_provider = create_provider(provider_type, api_key)
+        print(f"Using {provider_type.upper()} provider")
+    except Exception as e:
+        print(f"Error initializing {provider_type} provider: {e}")
+        return
     
     # Create tools
     tools = [
@@ -91,7 +119,7 @@ Each command requires confirmation before execution.
     ]
     
     # Create and run the agent
-    agent = Agent(client, tools)
+    agent = Agent(llm_provider, tools)
     agent.run()
 
 if __name__ == "__main__":
