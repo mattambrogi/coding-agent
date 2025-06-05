@@ -29,6 +29,7 @@ def list_files(params: Dict[str, Any]) -> str:
                 files.append(item)
         return json.dumps(files)
     except Exception as e:
+        print(f"[DEBUG] list_files failed for path '{path}': {str(e)}")
         return f"Error listing files: {str(e)}"
 
 def edit_file(params: Dict[str, Any]) -> str:
@@ -235,4 +236,46 @@ GREP_SCHEMA = {
         }
     },
     "required": ["pattern"]
+}
+
+# Simple in-memory storage for todo list
+_todo_state = ""
+
+def update_todos(params: Dict[str, Any]) -> str:
+    """Update and display todo list. Let the LLM manage the format and logic."""
+    global _todo_state
+    action = params.get("action", "")
+    content = params.get("content", "")
+    if action == "set":
+         _todo_state = content
+         print(f"\n📋 TODOS UPDATED:\n{content}\n")
+         return f"Todo list updated:\n{content}"
+    elif action == "get":
+         if _todo_state:
+             print(f"\n📋 CURRENT TODOS:\n{_todo_state}\n")
+             return f"Current todos:\n{_todo_state}"
+         else:
+             return "No todos currently set."
+    elif action == "clear":
+         _todo_state = ""
+         print("\n📋 TODOS CLEARED\n")
+         return "Todo list cleared."
+    else:
+         return "Error: action must be 'set', 'get', or 'clear'"
+
+# Simple schema for update_todos
+UPDATE_TODOS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "action": {
+            "type": "string",
+            "enum": ["set", "get", "clear"],
+            "description": "set: update todos with content, get: display current todos, clear: remove all todos"
+        },
+        "content": {
+            "type": "string",
+            "description": "Todo list content in any format (for 'set' action)"
+        }
+    },
+    "required": ["action"]
 }

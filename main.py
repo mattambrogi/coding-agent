@@ -12,11 +12,13 @@ from file_tools import (
     edit_file,
     create_new_file,
     grep_tool,
+    update_todos,
     READ_FILE_SCHEMA,
     LIST_FILES_SCHEMA,
     EDIT_FILE_SCHEMA,
     CREATE_FILE_SCHEMA,
-    GREP_SCHEMA
+    GREP_SCHEMA,
+    UPDATE_TODOS_SCHEMA
 )
 from shell_tools import execute_bash, BASH_SCHEMA
 
@@ -115,6 +117,19 @@ Each command requires confirmation before execution.
 """,
             input_schema=BASH_SCHEMA,
             function=execute_bash
+        ),
+        Tool(
+            name="update_todos",
+            description="""Update todo list for complex tasks. Use this to track progress on multi-step work.
+            
+Actions:
+- set: Create or update the todo list with your own format
+- get: Display current todos  
+- clear: Remove all todos
+
+You control the format - use markdown, emojis, whatever works best for the task.""",
+            input_schema=UPDATE_TODOS_SCHEMA,
+            function=update_todos
         )
     ]
     
