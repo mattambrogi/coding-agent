@@ -1,3 +1,4 @@
 .env
 coding-agent-env/
 venv/
+__pycache__/

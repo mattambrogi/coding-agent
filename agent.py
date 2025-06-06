@@ -42,6 +42,7 @@ class Agent:
 - create_file (create new files)
 - grep (search file contents)
 - execute_bash (run shell commands)
+- glob_files (search for files using a pattern)
 
 When asked about code or how something works, immediately use these tools to examine the relevant files without asking for permission. Use tools proactively to investigate the codebase and provide accurate, context-specific answers based on the actual code.
 

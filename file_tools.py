@@ -1,6 +1,7 @@
 # file_tools.py
 import os
 import json
+import glob
 from typing import Dict, Any
 
 def read_file(params: Dict[str, Any]) -> str:
@@ -163,6 +164,22 @@ def grep_tool(params: Dict[str, Any]) -> str:
     except Exception as e:
         return f"Error performing grep: {str(e)}"
 
+def glob_tool(params: Dict[str, Any]) -> str:
+    """Search for files using a pattern."""
+    pattern = params.get("pattern", "")
+    if not pattern:
+        return "Error: No pattern provided"
+
+    try:
+        # Exclude specific directories
+        excluded_dirs = {'*/.git/*', '*/__pycache__/*', '*/node_modules/*'}
+        matched_files = [f for f in glob.glob(pattern, recursive=True) if not any(glob.fnmatch.fnmatch(f, ex) for ex in excluded_dirs)]
+        if not matched_files:
+            return "No files matched the pattern"
+        return json.dumps(matched_files)
+    except Exception as e:
+        return f"Error in glob operation: {str(e)}"
+
 # Tool schemas
 READ_FILE_SCHEMA = {
     "type": "object",
@@ -262,6 +279,18 @@ def update_todos(params: Dict[str, Any]) -> str:
          return "Todo list cleared."
     else:
          return "Error: action must be 'set', 'get', or 'clear'"
+
+# Schema for the glob_tool
+GLOB_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "pattern": {
+            "type": "string",
+            "description": "Glob pattern to search for files"
+        }
+    },
+    "required": ["pattern"]
+}
 
 # Simple schema for update_todos
 UPDATE_TODOS_SCHEMA = {

@@ -12,12 +12,14 @@ from file_tools import (
     edit_file,
     create_new_file,
     grep_tool,
+    glob_tool,
     update_todos,
     READ_FILE_SCHEMA,
     LIST_FILES_SCHEMA,
     EDIT_FILE_SCHEMA,
     CREATE_FILE_SCHEMA,
     GREP_SCHEMA,
+    GLOB_SCHEMA,
     UPDATE_TODOS_SCHEMA
 )
 from shell_tools import execute_bash, BASH_SCHEMA
@@ -92,6 +94,14 @@ If the file specified with path doesn't exist, it will be created (when old_str 
             description="Create a new file with the given content. This is specifically for creating new files, while edit_file can be used for both creating and modifying files.",
             input_schema=CREATE_FILE_SCHEMA,
             function=create_new_file
+        ),
+        Tool(
+            name="glob",
+            description="""Search for files using a glob pattern.
+Use this tool to find files matching specific patterns, excluding certain directories like .git, __pycache__, and node_modules.
+""",
+            input_schema=GLOB_SCHEMA,
+            function=glob_tool
         ),
         Tool(
             name="grep",

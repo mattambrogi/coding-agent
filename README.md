@@ -87,7 +87,38 @@ The agent uses a provider abstraction layer that allows seamless switching betwe
 - `file_tools.py` - File manipulation tools
 - `shell_tools.py` - Bash execution tools
 
+## Tools
+
+### File Operations
+- **read_file**: Read contents of a file
+- **list_files**: List contents of a directory
+- **edit_file**: Modify existing files
+- **create_file**: Create new files
+- **grep**: Search file contents using regex
+- **glob**: Search for files using glob patterns
+  - Supports recursive search
+  - Automatically excludes common directories (.git, __pycache__, node_modules)
+  - Returns JSON array of matched files
+  - *Note: This agent implemented this tool for itself*
+
+### Task Management
+- **update_todos**: Manage task tracking for complex operations
+  - Actions: set, get, clear
+  - Supports custom formatting (markdown, emojis, etc.)
+  - Maintains state between operations
+  - Useful for tracking progress on multi-step tasks
+
+### Shell Operations
+- **execute_bash**: Run approved shell commands
+  - File operations (ls, find, cat)
+  - Git operations
+  - Package management
+  - Requires confirmation before execution
+
 ## Todos
-* Add a thinking tool
-* Improve prompting and instructions
 * ✅ Abstract system such that it can work with OpenAI or Anthropic models
+* ✅ Add a thinking tool
+* ✅ Add glob tool
+* Add multi-edit tool
+* Improve prompting and instructions
+* Give great tech talk
