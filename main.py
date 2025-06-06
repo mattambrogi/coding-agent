@@ -12,11 +12,15 @@ from file_tools import (
     edit_file,
     create_new_file,
     grep_tool,
+    glob_tool,
+    update_todos,
     READ_FILE_SCHEMA,
     LIST_FILES_SCHEMA,
     EDIT_FILE_SCHEMA,
     CREATE_FILE_SCHEMA,
-    GREP_SCHEMA
+    GREP_SCHEMA,
+    GLOB_SCHEMA,
+    UPDATE_TODOS_SCHEMA
 )
 from shell_tools import execute_bash, BASH_SCHEMA
 
@@ -92,6 +96,14 @@ If the file specified with path doesn't exist, it will be created (when old_str 
             function=create_new_file
         ),
         Tool(
+            name="glob",
+            description="""Search for files using a glob pattern.
+Use this tool to find files matching specific patterns, excluding certain directories like .git, __pycache__, and node_modules.
+""",
+            input_schema=GLOB_SCHEMA,
+            function=glob_tool
+        ),
+        Tool(
             name="grep",
             description="""Search file contents using regular expressions.
 Use this to find text patterns within files. Provides file paths, line numbers, and matching lines.
@@ -115,6 +127,19 @@ Each command requires confirmation before execution.
 """,
             input_schema=BASH_SCHEMA,
             function=execute_bash
+        ),
+        Tool(
+            name="update_todos",
+            description="""Update todo list for complex tasks. Use this to track progress on multi-step work.
+            
+Actions:
+- set: Create or update the todo list with your own format
+- get: Display current todos  
+- clear: Remove all todos
+
+You control the format - use markdown, emojis, whatever works best for the task.""",
+            input_schema=UPDATE_TODOS_SCHEMA,
+            function=update_todos
         )
     ]
     

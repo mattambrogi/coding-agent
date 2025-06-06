@@ -1,6 +1,7 @@
 # file_tools.py
 import os
 import json
+import glob
 from typing import Dict, Any
 
 def read_file(params: Dict[str, Any]) -> str:
@@ -29,6 +30,7 @@ def list_files(params: Dict[str, Any]) -> str:
                 files.append(item)
         return json.dumps(files)
     except Exception as e:
+        print(f"[DEBUG] list_files failed for path '{path}': {str(e)}")
         return f"Error listing files: {str(e)}"
 
 def edit_file(params: Dict[str, Any]) -> str:
@@ -162,6 +164,22 @@ def grep_tool(params: Dict[str, Any]) -> str:
     except Exception as e:
         return f"Error performing grep: {str(e)}"
 
+def glob_tool(params: Dict[str, Any]) -> str:
+    """Search for files using a pattern."""
+    pattern = params.get("pattern", "")
+    if not pattern:
+        return "Error: No pattern provided"
+
+    try:
+        # Exclude specific directories
+        excluded_dirs = {'*/.git/*', '*/__pycache__/*', '*/node_modules/*'}
+        matched_files = [f for f in glob.glob(pattern, recursive=True) if not any(glob.fnmatch.fnmatch(f, ex) for ex in excluded_dirs)]
+        if not matched_files:
+            return "No files matched the pattern"
+        return json.dumps(matched_files)
+    except Exception as e:
+        return f"Error in glob operation: {str(e)}"
+
 # Tool schemas
 READ_FILE_SCHEMA = {
     "type": "object",
@@ -235,4 +253,58 @@ GREP_SCHEMA = {
         }
     },
     "required": ["pattern"]
+}
+
+# Simple in-memory storage for todo list
+_todo_state = ""
+
+def update_todos(params: Dict[str, Any]) -> str:
+    """Update and display todo list. Let the LLM manage the format and logic."""
+    global _todo_state
+    action = params.get("action", "")
+    content = params.get("content", "")
+    if action == "set":
+         _todo_state = content
+         print(f"\n📋 TODOS UPDATED:\n{content}\n")
+         return f"Todo list updated:\n{content}"
+    elif action == "get":
+         if _todo_state:
+             print(f"\n📋 CURRENT TODOS:\n{_todo_state}\n")
+             return f"Current todos:\n{_todo_state}"
+         else:
+             return "No todos currently set."
+    elif action == "clear":
+         _todo_state = ""
+         print("\n📋 TODOS CLEARED\n")
+         return "Todo list cleared."
+    else:
+         return "Error: action must be 'set', 'get', or 'clear'"
+
+# Schema for the glob_tool
+GLOB_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "pattern": {
+            "type": "string",
+            "description": "Glob pattern to search for files"
+        }
+    },
+    "required": ["pattern"]
+}
+
+# Simple schema for update_todos
+UPDATE_TODOS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "action": {
+            "type": "string",
+            "enum": ["set", "get", "clear"],
+            "description": "set: update todos with content, get: display current todos, clear: remove all todos"
+        },
+        "content": {
+            "type": "string",
+            "description": "Todo list content in any format (for 'set' action)"
+        }
+    },
+    "required": ["action"]
 }
