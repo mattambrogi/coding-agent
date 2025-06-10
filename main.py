@@ -74,7 +74,7 @@ def main():
         ),
         Tool(
             name="list_files",
-            description="List files and directories at a given path. If no path is provided, lists files in the current directory.",
+            description="""List files and directories at a given path. If no path is provided, lists files in the current directory. To list root files you may need to pass "." as the path""",
             input_schema=LIST_FILES_SCHEMA,
             function=list_files
         ),
@@ -83,6 +83,8 @@ def main():
             description="""Make edits to a text file.
 
 Replaces 'old_str' with 'new_str' in the given file. 'old_str' and 'new_str' MUST be different from each other.
+
+This tool also takes an expected_replacements parameter. This is the number of replacements you expect to make. If the number of replacements is not as expected, the tool will return an error. This helps prevent the tool from making extra unintended replacements.
 
 If the file specified with path doesn't exist, it will be created (when old_str is empty).
 """,
@@ -130,14 +132,14 @@ Each command requires confirmation before execution.
         ),
         Tool(
             name="update_todos",
-            description="""Update todo list for complex tasks. Use this to track progress on multi-step work.
+            description=""" Create or update todo list for complex tasks. Use this to track progress on multi-step work.
             
 Actions:
 - set: Create or update the todo list with your own format
 - get: Display current todos  
 - clear: Remove all todos
 
-You control the format - use markdown, emojis, whatever works best for the task.""",
+You control the format - use markdown, emojis, whatever works best for the task. The primary purpose of this tool is to help you as the agent to keep track of your progress on complex tasks. It also helps communicate intent to the user.""",
             input_schema=UPDATE_TODOS_SCHEMA,
             function=update_todos
         )

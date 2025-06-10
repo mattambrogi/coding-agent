@@ -43,6 +43,7 @@ class Agent:
 - grep (search file contents)
 - execute_bash (run shell commands)
 - glob_files (search for files using a pattern)
+- update_todos (create or update todo list for complex tasks)
 
 When asked about code or how something works, immediately use these tools to examine the relevant files without asking for permission. Use tools proactively to investigate the codebase and provide accurate, context-specific answers based on the actual code.
 
