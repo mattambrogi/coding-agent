@@ -38,6 +38,7 @@ def edit_file(params: Dict[str, Any]) -> str:
     path = params.get("path", "")
     old_str = params.get("old_str", "")
     new_str = params.get("new_str", "")
+    expected_replacements = params.get("expected_replacements", 1)
     
     if not path or old_str == new_str:
         return "Error: Invalid parameters"
@@ -57,18 +58,22 @@ def edit_file(params: Dict[str, Any]) -> str:
         with open(path, 'r', encoding='utf-8') as file:
             content = file.read()
         
-        # Replace text
-        new_content = content.replace(old_str, new_str)
-        
-        # Check if any replacements were made
-        if new_content == content and old_str != "":
+        # Count actual occurrences
+        actual_count = content.count(old_str)
+        if actual_count == 0:
             return "Error: old_str not found in file"
+        
+        if actual_count != expected_replacements:
+            return f"Error: Expected {expected_replacements} replacements but found {actual_count}"
+        
+        # Replace text (limit to expected count for safety)
+        new_content = content.replace(old_str, new_str, expected_replacements)
         
         # Write the new content
         with open(path, 'w', encoding='utf-8') as file:
             file.write(new_content)
             
-        return "OK"
+        return f"OK - Made {expected_replacements} replacement(s)"
     except Exception as e:
         return f"Error editing file: {str(e)}"
     
@@ -211,11 +216,16 @@ EDIT_FILE_SCHEMA = {
         },
         "old_str": {
             "type": "string",
-            "description": "Text to search for - must match exactly and must only have one match exactly"
+            "description": "Text to search for - must match exactly"
         },
         "new_str": {
             "type": "string",
             "description": "Text to replace old_str with"
+        },
+        "expected_replacements": {
+            "type": "integer",
+            "description": "Number of replacements expected (default: 1)",
+            "default": 1
         }
     },
     "required": ["path", "old_str", "new_str"]
