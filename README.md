@@ -1,8 +1,10 @@
 ## Coding Agent
 
-A multi-provider coding agent with support for both Anthropic and OpenAI LLM providers.
+A terminal-based coding agent with support for both Anthropic and OpenAI LLM providers.
 
-Inspired by: https://ampcode.com/how-to-build-an-agent
+Inpsiration: 
+- Base implementation: https://ampcode.com/how-to-build-an-agent
+- Additional tools: Claude Code
 
 ## Features
 
@@ -56,6 +58,15 @@ python main.py --provider openai
 python main.py --help
 ```
 
+### Tips for Use
+- The agent is capable of working on itself or any other repo on your computer. Simply instruct it which repo to navigate to. It should be able to use the built in bash tool to navigate to, read, and edit files in other repos.
+- The Todo tool is useful for complex tasks and will be used by default when the agent deems it appropriate. If you do not want the agent to use this tool as it can clutter the terminal, just instruct it not to.
+- Code editing and implementation works well on simple tasks but may struggle on feature level work. Try breaking tasks into smaller sub-tasks.
+- Before asking the agent to edit code, it is helpful to prompt it to explore the part of the codebase you are interested in modifying.
+- This agent excels at code understanding and search
+- Search is done entirely locally and no code will be embedded or indexed elsewhere.
+
+
 ## Environment Variables
 
 | Variable | Description | Default |
@@ -93,6 +104,7 @@ The agent uses a provider abstraction layer that allows seamless switching betwe
 - **read_file**: Read contents of a file
 - **list_files**: List contents of a directory
 - **edit_file**: Modify existing files
+- **multi_edit_file**: Apply multiple edits to one file with reduced chance of conflicts
 - **create_file**: Create new files
 - **grep**: Search file contents using regex
 - **glob**: Search for files using glob patterns
@@ -115,10 +127,12 @@ The agent uses a provider abstraction layer that allows seamless switching betwe
   - Package management
   - Requires confirmation before execution
 
+## Limitations
+- Tool calls are not currently executed in parallel
+
 ## Todos
 * ✅ Abstract system such that it can work with OpenAI or Anthropic models
 * ✅ Add a thinking tool
 * ✅ Add glob tool
+* ✅ Improve prompting and instructions
 * Add multi-edit tool
-* Improve prompting and instructions
-* Give great tech talk

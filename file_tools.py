@@ -2,7 +2,23 @@
 import os
 import json
 import glob
-from typing import Dict, Any
+import ast  # Added for parsing Python literal strings when edits are provided as a string
+from typing import Dict, Any, List, TypedDict
+
+class EditOperation(TypedDict):
+    old_str: str
+    new_str: str
+    expected_replacements: int
+
+class EditFileParams(TypedDict):
+    path: str
+    old_str: str
+    new_str: str
+    expected_replacements: int
+
+class MultiEditParams(TypedDict):
+    path: str
+    edits: List[EditOperation]
 
 def read_file(params: Dict[str, Any]) -> str:
     """Read the contents of a file."""
@@ -30,14 +46,14 @@ def list_files(params: Dict[str, Any]) -> str:
                 files.append(item)
         return json.dumps(files)
     except Exception as e:
-        print(f"[DEBUG] list_files failed for path '{path}': {str(e)}")
         return f"Error listing files: {str(e)}"
 
-def edit_file(params: Dict[str, Any]) -> str:
+def edit_file(params: EditFileParams) -> str:
     """Edit a file by replacing text."""
     path = params.get("path", "")
     old_str = params.get("old_str", "")
     new_str = params.get("new_str", "")
+    expected_replacements = params.get("expected_replacements", 1)
     
     if not path or old_str == new_str:
         return "Error: Invalid parameters"
@@ -57,22 +73,95 @@ def edit_file(params: Dict[str, Any]) -> str:
         with open(path, 'r', encoding='utf-8') as file:
             content = file.read()
         
-        # Replace text
-        new_content = content.replace(old_str, new_str)
-        
-        # Check if any replacements were made
-        if new_content == content and old_str != "":
+        # Count actual occurrences
+        actual_count = content.count(old_str)
+        if actual_count == 0:
             return "Error: old_str not found in file"
+        
+        if actual_count != expected_replacements:
+            return f"Error: Expected {expected_replacements} replacements but found {actual_count}"
+        
+        # Replace text (limit to expected count for safety)
+        new_content = content.replace(old_str, new_str, expected_replacements)
         
         # Write the new content
         with open(path, 'w', encoding='utf-8') as file:
             file.write(new_content)
             
-        return "OK"
+        return f"OK - Made {expected_replacements} replacement(s)"
     except Exception as e:
         return f"Error editing file: {str(e)}"
+
+def multi_edit_file(params: MultiEditParams) -> str:
+    """Apply multiple edits atomically with sequential validation."""
     
-# file_tools.py
+    path = params.get("path", "")
+    edits = params.get("edits")  # May be list or string
+
+    # Basic path check first
+    if not path:
+        error_msg = _generate_multi_edit_help()
+        return error_msg
+
+    # Now handle string-encoded edits
+    if isinstance(edits, str):
+        try:
+            # Try JSON first
+            edits_parsed = json.loads(edits)
+        except json.JSONDecodeError:
+            try:
+                # Try Python literal (handles single quotes & multiline)
+                edits_parsed = ast.literal_eval(edits)
+            except Exception as e:
+                error_msg = f"{_generate_multi_edit_help()}\n\nSpecific issue: Unable to parse 'edits' string: {str(e)}"
+                return error_msg
+        edits = edits_parsed
+
+    # Final validation
+    if not isinstance(edits, list) or len(edits) == 0:
+        error_msg = _generate_multi_edit_help()
+        return error_msg
+    
+    try:
+        # Read original content
+        if not os.path.exists(path):
+            error_msg = f"Error: File '{path}' does not exist"
+            return error_msg
+            
+        with open(path, 'r', encoding='utf-8') as file:
+            working_content = file.read()
+        
+        # Validate and apply each edit sequentially
+        for i, edit in enumerate(edits):
+            old_str = edit.get("old_str", "")
+            new_str = edit.get("new_str", "")
+            expected_count = edit.get("expected_replacements", 1)
+                
+            # Count occurrences in CURRENT state
+            actual_count = working_content.count(old_str)
+            
+            if actual_count == 0:
+                error_msg = f"Error: Edit {i+1} - '{old_str}' not found (may conflict with previous edits)"
+                return error_msg
+            
+            if actual_count != expected_count:
+                error_msg = f"Error: Edit {i+1} - expected {expected_count} replacements, found {actual_count}"
+                return error_msg
+            
+            # Apply edit to working copy
+            working_content = working_content.replace(old_str, new_str, expected_count)
+        
+        # Write final result atomically
+        with open(path, 'w', encoding='utf-8') as file:
+            file.write(working_content)
+        
+        success_msg = f"Successfully applied {len(edits)} edits to {path}"
+        return success_msg
+        
+    except Exception as e:
+        error_msg = f"Error in multi-edit: {str(e)}"
+        return error_msg
+    
 def create_new_file(params: Dict[str, Any]) -> str:
     """Create a new file with the given content."""
     path = params.get("path", "")
@@ -211,14 +300,56 @@ EDIT_FILE_SCHEMA = {
         },
         "old_str": {
             "type": "string",
-            "description": "Text to search for - must match exactly and must only have one match exactly"
+            "description": "Text to search for - must match exactly"
         },
         "new_str": {
             "type": "string",
             "description": "Text to replace old_str with"
+        },
+        "expected_replacements": {
+            "type": "integer",
+            "description": "Number of replacements expected (default: 1)",
+            "default": 1
         }
     },
     "required": ["path", "old_str", "new_str"]
+}
+
+MULTI_EDIT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "path": {
+            "type": "string",
+            "description": "Path to the file to edit"
+        },
+        "edits": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "old_str": {
+                        "type": "string",
+                        "description": "Text to find and replace"
+                    },
+                    "new_str": {
+                        "type": "string", 
+                        "description": "Text to replace old_str with"
+                    },
+                    "expected_replacements": {
+                        "type": "integer", 
+                        "default": 1,
+                        "description": "Number of replacements expected (default: 1)"
+                    }
+                },
+                "required": ["old_str", "new_str"],
+                "additionalProperties": False
+            },
+            "description": "Array of edit operations to apply sequentially. Each edit must have old_str (text to find) and new_str (replacement text)."
+        }
+    },
+    "required": ["path", "edits"],
+    "additionalProperties": False
 }
 
 CREATE_FILE_SCHEMA = {
@@ -308,3 +439,28 @@ UPDATE_TODOS_SCHEMA = {
     },
     "required": ["action"]
 }
+
+def _generate_multi_edit_help() -> str:
+    """Generate a helpful error message showing the expected structure for multi_edit_file."""
+    return """Error: Invalid parameters for multi_edit_file.
+
+Expected structure:
+{
+  "path": "string (required) - file to edit",
+  "edits": [
+    {
+      "old_str": "string (required) - text to find and replace",
+      "new_str": "string (required) - replacement text", 
+      "expected_replacements": "integer (optional, default=1) - number of expected replacements"
+    }
+  ]
+}
+
+Example:
+{
+  "path": "example.py",
+  "edits": [
+    {"old_str": "old_function", "new_str": "new_function", "expected_replacements": 1},
+    {"old_str": "old_var", "new_str": "new_var", "expected_replacements": 3}
+  ]
+}"""

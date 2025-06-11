@@ -10,6 +10,7 @@ from file_tools import (
     read_file,
     list_files,
     edit_file,
+    multi_edit_file,
     create_new_file,
     grep_tool,
     glob_tool,
@@ -17,6 +18,7 @@ from file_tools import (
     READ_FILE_SCHEMA,
     LIST_FILES_SCHEMA,
     EDIT_FILE_SCHEMA,
+    MULTI_EDIT_SCHEMA,
     CREATE_FILE_SCHEMA,
     GREP_SCHEMA,
     GLOB_SCHEMA,
@@ -74,7 +76,7 @@ def main():
         ),
         Tool(
             name="list_files",
-            description="List files and directories at a given path. If no path is provided, lists files in the current directory.",
+            description="""List files and directories at a given path. If no path is provided, lists files in the current directory. To list root files you may need to pass "." as the path""",
             input_schema=LIST_FILES_SCHEMA,
             function=list_files
         ),
@@ -84,10 +86,42 @@ def main():
 
 Replaces 'old_str' with 'new_str' in the given file. 'old_str' and 'new_str' MUST be different from each other.
 
+This tool also takes an expected_replacements parameter. This is the number of replacements you expect to make. If the number of replacements is not as expected, the tool will return an error. This helps prevent the tool from making extra unintended replacements.
+
 If the file specified with path doesn't exist, it will be created (when old_str is empty).
 """,
             input_schema=EDIT_FILE_SCHEMA,
             function=edit_file
+        ),
+        Tool(
+            name="multi_edit_file",
+            description="""Make multiple edits to a text file atomically.
+
+This tool takes an array of edits, each with an old_str and new_str. It applies all edits sequentially to ensure they work together correctly.
+
+IMPORTANT: You must provide both 'path' and 'edits' parameters.
+
+Example usage:
+{
+  "path": "file.py",
+  "edits": [
+    {"old_str": "old_function_name", "new_str": "new_function_name", "expected_replacements": 1},
+    {"old_str": "old_variable", "new_str": "new_variable", "expected_replacements": 3}
+  ]
+}
+
+Use cases:
+- To rename a variable: first edit declaration, then edit all usages
+- To update function signatures: edit definition, then all call sites
+
+Each edit can specify expected_replacements (defaults to 1) for safety - the tool will fail if the actual count doesn't match. Use this to prevent accidental multiple replacements.
+
+Required parameters:
+- path: file to edit
+- edits: array of {old_str, new_str, expected_replacements} objects
+""",
+            input_schema=MULTI_EDIT_SCHEMA,
+            function=multi_edit_file
         ),
         Tool(
             name="create_file",
@@ -130,14 +164,14 @@ Each command requires confirmation before execution.
         ),
         Tool(
             name="update_todos",
-            description="""Update todo list for complex tasks. Use this to track progress on multi-step work.
+            description=""" Create or update todo list for complex tasks. Use this to track progress on multi-step work.
             
 Actions:
 - set: Create or update the todo list with your own format
 - get: Display current todos  
 - clear: Remove all todos
 
-You control the format - use markdown, emojis, whatever works best for the task.""",
+You control the format - use markdown, emojis, whatever works best for the task. The primary purpose of this tool is to help you as the agent to keep track of your progress on complex tasks. It also helps communicate intent to the user.""",
             input_schema=UPDATE_TODOS_SCHEMA,
             function=update_todos
         )
