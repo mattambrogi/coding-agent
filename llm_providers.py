@@ -56,8 +56,8 @@ class AnthropicProvider(LLMProvider):
     def create_message(self, system: str, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]) -> Any:
         """Create message using Anthropic API."""
         return self.client.messages.create(
-            model="claude-3-7-sonnet-20250219",
-            max_tokens=1024,
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
             system=system,
             messages=messages,
             tools=tools
@@ -104,8 +104,8 @@ class OpenAIProvider(LLMProvider):
         
         # Make the API call
         kwargs = {
-            "model": "gpt-4o",
-            "max_tokens": 1024,
+            "model": "gpt-4.1-2025-04-14",
+            "max_tokens": 4096,
             "messages": openai_messages
         }
         

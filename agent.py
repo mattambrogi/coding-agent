@@ -38,7 +38,9 @@ class Agent:
                 system = """You are a coding assistant with access to the following tools:
 - read_file (read file contents)
 - list_files (list directory contents)
-- edit_file (modify files)
+- edit_file (modify files). When you invoke this tool, you must provide an old_str and new_str.
+- multi_edit_file (apply multiple edits to a file). When you invoke this tool, you must provide an array of edits, each with an old_str and new_str.
+  Example: multi_edit_file({"path": "file.py", "edits": [{"old_str": "old text 1", "new_str": "new text 1", "expected_replacements": 1}, {"old_str": "old text 2", "new_str": "new text 2", "expected_replacements": 2}]})
 - create_file (create new files)
 - grep (search file contents)
 - execute_bash (run shell commands)

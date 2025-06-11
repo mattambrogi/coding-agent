@@ -10,6 +10,7 @@ from file_tools import (
     read_file,
     list_files,
     edit_file,
+    multi_edit_file,
     create_new_file,
     grep_tool,
     glob_tool,
@@ -17,6 +18,7 @@ from file_tools import (
     READ_FILE_SCHEMA,
     LIST_FILES_SCHEMA,
     EDIT_FILE_SCHEMA,
+    MULTI_EDIT_SCHEMA,
     CREATE_FILE_SCHEMA,
     GREP_SCHEMA,
     GLOB_SCHEMA,
@@ -90,6 +92,36 @@ If the file specified with path doesn't exist, it will be created (when old_str 
 """,
             input_schema=EDIT_FILE_SCHEMA,
             function=edit_file
+        ),
+        Tool(
+            name="multi_edit_file",
+            description="""Make multiple edits to a text file atomically.
+
+This tool takes an array of edits, each with an old_str and new_str. It applies all edits sequentially to ensure they work together correctly.
+
+IMPORTANT: You must provide both 'path' and 'edits' parameters.
+
+Example usage:
+{
+  "path": "file.py",
+  "edits": [
+    {"old_str": "old_function_name", "new_str": "new_function_name", "expected_replacements": 1},
+    {"old_str": "old_variable", "new_str": "new_variable", "expected_replacements": 3}
+  ]
+}
+
+Use cases:
+- To rename a variable: first edit declaration, then edit all usages
+- To update function signatures: edit definition, then all call sites
+
+Each edit can specify expected_replacements (defaults to 1) for safety - the tool will fail if the actual count doesn't match. Use this to prevent accidental multiple replacements.
+
+Required parameters:
+- path: file to edit
+- edits: array of {old_str, new_str, expected_replacements} objects
+""",
+            input_schema=MULTI_EDIT_SCHEMA,
+            function=multi_edit_file
         ),
         Tool(
             name="create_file",
