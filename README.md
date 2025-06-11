@@ -135,4 +135,4 @@ The agent uses a provider abstraction layer that allows seamless switching betwe
 * ✅ Add a thinking tool
 * ✅ Add glob tool
 * ✅ Improve prompting and instructions
-* Add multi-edit tool
+* ✅ Add multi-edit tool
